@@ -82,9 +82,19 @@ git revert   版本号    （恢复到提交版本号之前，和前者不同是
 
 ## 四.git分支
 
-。
+创建分支，基于有提交的情况
 
-## 五.
+git branch user(分支名)
+
+git checkout user   	切换分支
+
+git checkout -b order 创建并切换分支
+
+git branch -d user删除分支
+
+git branch  -v查看分支
+
+## 五.	
 
 
 
