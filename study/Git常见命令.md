@@ -82,6 +82,8 @@ git revert   版本号    （恢复到提交版本号之前，和前者不同是
 
 ## 四.git分支
 
+#### 1.分支创建
+
 创建分支，基于有提交的情况
 
 git branch user(分支名)
@@ -92,9 +94,37 @@ git checkout -b order 创建并切换分支
 
 git branch -d user删除分支
 
+#### 2.分支合并
+
 git branch  -v查看分支
 
-## 五.	
+git merge user（ 要合并的分支名)
 
+#### 3.标签
 
+git tag
+
+git tag uptfile(标签名) 版本号	给版本号添加标签
+
+git tag -d  uptrfile(标签名)		删除标签
+
+git log  --oneline一行日志
+
+#### 4.更多分支操作
+
+git cherry-pick 指定分支		将指定数量的分支同步到指定分支
+
+git变基
+
+## 五.代码托管
+
+#### 1.远程仓库操作
+
+git remote add origin
+
+git push origin 	将文件推送到远程仓库
+
+git pull origin		将远程仓库拉取到本地
+
+#### 2.远程仓库搭建
 
