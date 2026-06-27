@@ -1,0 +1,78 @@
+1. 黄金法则（面试直接背这句）
+叠加顺序（代码书写）：靠近函数定义（def）的装饰器先执行。
+
+执行顺序（数学等价）：@A @B def f() 等价于 f = A(B(f))。
+
+调用顺序（运行时）：自下而上包装，自上而下调用（先进入最外层装饰器，最后进入原函数）。
+
+2. 直观代码演示（打印日志法）
+看下面这段代码，猜猜打印顺序是什么？
+
+python
+def decorator_a(func):
+    print("1. 装饰器A 正在包装（外层）")
+    def wrapper(*args):
+        print("3. [调用] 进入A包装器")
+        result = func(*args)
+        print("6. [调用] 离开A包装器")
+        return result
+    return wrapper
+
+def decorator_b(func):
+    print("2. 装饰器B 正在包装（内层）")
+    def wrapper(*args):
+        print("4. [调用] 进入B包装器")
+        result = func(*args)
+        print("5. [调用] 离开B包装器")
+        return result
+    return wrapper
+
+@decorator_a  # 外层
+@decorator_b  # 内层
+def my_add(x, y):
+    print(">>> 原函数执行中 <<<")
+    return x + y
+
+# 执行调用
+my_add(1, 2)
+输出结果（绝对让你一眼看穿）：
+
+text
+1. 装饰器A 正在包装（外层）
+2. 装饰器B 正在包装（内层）
+3. [调用] 进入A包装器
+4. [调用] 进入B包装器
+>>> 原函数执行中 <<<
+5. [调用] 离开B包装器
+6. [调用] 离开A包装器
+解读：
+定义时：Python先读取最内层的@decorator_b（打印1），把原函数变成wrapper_b；再把wrapper_b传给外层@decorator_a（打印2）。
+调用时：执行顺序像“剥洋葱”，由外向内进（3→4），由内向外出（5→6）。
+
+3. 结合你的“缓存面试题”场景（实战意义）
+假设你既有缓存装饰器，又有日志装饰器：
+
+python
+@logger          # 外层：记录调用日志
+@cached(3)       # 内层：先检查缓存
+def get_data(id):
+    return 查询数据库...
+定义时：cached先包装原始函数，logger再包装cached返回的wrapper。
+
+调用时：
+
+先进入logger（打印“正在调用get_data”）。
+再进入cached（检查缓存，若命中直接返回，根本不会进入原函数）。
+若缓存未命中，才执行原函数。
+这种机制让你可以灵活组合功能，且内层装饰器决定了外层的func到底是什么。
+
+4. 面试加分陷阱（一定要提）
+面试官如果问你“有什么坑”，一定要答出这两点：
+
+functools.wraps 的重要性：如果没有@wraps(func)，多层装饰后，原函数的__name__和__doc__会丢失（变成最外层wrapper的名字）。在你的缓存题标准答案里，务必加上@wraps(func)。
+
+参数传递：外层wrapper接收(*args, **kwargs)，传给内层wrapper，再传给原函数。中间任何一层如果篡改了参数，后续所有层都会受影响。
+
+5. 终极记忆口诀（给面试官秀一下）
+“先内后外搭架子，先外后内进门来；
+洋葱剥皮层层进，原函数在最里呆。”
