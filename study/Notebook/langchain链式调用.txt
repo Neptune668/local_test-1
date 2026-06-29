@@ -1,0 +1,77 @@
+LangChain 的链式调用（Chaining），核心思想是将多个处理步骤通过管道操作符 | 连接起来，形成一个完整的数据处理流水线。它的本质是将多个组件（如模型、提示词模板、工具等）组合成一个可复用、可组合的工作流，让前一步的输出自动成为后一步的输入。
+
+💡 核心概念：LCEL (LangChain 表达式语言)
+在 LangChain 的现代用法中，LCEL 是构建链的首选和推荐方式。
+
+| 管道操作符：这是 LCEL 的核心。它像 Unix 管道一样，将不同的“可运行对象”（Runnables）串联起来。
+
+函数式组合：代码更简洁、直观，易于理解和维护。
+
+最基本的链可以简单到只包含一个提示词模板和一个模型：
+
+python
+from langchain.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
+
+prompt = PromptTemplate.from_template("描述一下在{city}完美的一天。")
+model = ChatOpenAI(model="gpt-4o-mini")
+
+# 使用 | 运算符将提示词和模型组合成一个链
+chain = prompt | model
+
+# 调用链，传入输入
+chain.invoke({"city": "巴黎"})
+在这个例子中，city 参数首先被填入 prompt 模板，生成完整的提示词，然后传递给 model 得到最终回复。
+
+常见的链类型
+LangChain 支持构建不同复杂度的链来应对各种场景。
+
+链类型	描述	适用场景
+基础链 (Basic Chain)	最简单的形式，通常只包含一个提示词模板和一个模型调用。	简单的问答、文本生成等单一任务。
+顺序链 (Sequential Chain)	将多个链按固定顺序连接，前一个的输出作为后一个的输入。	多步骤任务，如：先生成文章大纲，再根据大纲写全文；或者先总结文本，再翻译总结。
+路由链 (Routing Chain)	根据输入内容或中间结果，动态选择下一步要执行的链或工具。	复杂的决策系统，如：根据问题的类型（技术/通用）调用不同的专家模型来回答。
+并行链 (Parallel Chain)	同时调用多个工具或模型，最后将各自的结果聚合起来。	多模态分析，如同时分析一段文本的情感和一张图片的内容。
+🛠️ 如何构建和调用链
+1. 构建链的两种方式
+现代方式 (推荐)：使用 LCEL
+这是当前的主流实践，核心就是使用 | 管道操作符。
+
+python
+from langchain.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain_core.output_parsers import StrOutputParser
+
+model = ChatOpenAI()
+prompt = PromptTemplate.from_template("讲一个关于{topic}的笑话")
+output_parser = StrOutputParser() # 用于解析模型输出
+
+# 用 | 组合成链
+chain = prompt | model | output_parser
+chain.invoke({"topic": "程序员"})
+传统方式 (遗留)：继承 Chain 类
+这是 LangChain 早期的用法，现在已不推荐，但在一些旧代码中可能还会见到。它通过创建类并实现 _call 方法来定义链的逻辑。
+
+2. 调用链的方法
+构建好的链可以通过以下方法执行：
+
+invoke (推荐)：这是 LCEL 的标准调用方法，输入输出均为字典，功能最强大。
+
+__call__：链是可调用的，__call__ 是执行链的主要方式，输入是字典，返回也是字典。
+
+run：这是一个便捷方法，仅适用于单个输入和单个输出的链，直接返回字符串结果。
+
+python
+# 假设 chain 只有一个输入 'question' 和一个输出
+result = chain.run("上海今天的天气怎么样？")[reference:24]
+核心优势与最佳实践
+核心优势：链式调用可以将复杂任务逻辑解耦与复用，并支持动态流程控制，如条件分支和循环。
+
+最佳实践：
+
+优先使用 LCEL：更简洁、灵活，是官方推荐的现代写法。
+
+善用数据转换：在链的中间步骤使用普通 Python 函数或 RunnableLambda 来清洗、映射或转换数据格式。
+
+管理状态与上下文：对于需要记忆的对话等场景，可以利用 Memory 模块在链的步骤间传递对话历史等状态信息。
+
+LangChain 的链式调用提供了一套强大而灵活的模式，从简单的 API 调用到复杂的多步推理，都能通过组合不同的“零件”来优雅实现。
