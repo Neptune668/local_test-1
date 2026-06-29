@@ -1,0 +1,10 @@
+1. 基础必考题：四种消息格式的底层原理
+问题：LangChain支持字符串、元组、字典和对象四种格式传入消息，底层是如何统一处理的？哪种性能最好？
+
+💡 回答思路：
+
+核心机制：无论传入哪种格式，ChatOpenAI 底层都会调用 _convert_messages_to_openai_format() 这类转换器，将它们统一标准化为 OpenAI API 所需的 List[Dict] 格式（包含 role 和 content）。
+
+效率差异：消息对象（Object）性能最好（省去类型推断），字符串性能最差（需额外解析）。因为传入字符串时，LangChain 必须执行类型推断（默认当成 HumanMessage），而传入对象时直接映射属性，减少了 isinstance() 和 role 映射的开销。
+
+元组 vs 字典：元组解包速度略快于字典哈希查找，但差异微乎其微；字典可读性更好且兼容 OpenAI 原生 SDK。
